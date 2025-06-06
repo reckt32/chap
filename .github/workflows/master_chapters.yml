@@ -28,15 +28,19 @@ jobs:
           npm install
           npm run build --if-present
           npm run test --if-present
+        working-directory: chapter-dashboard-api # <--- ADDED THIS LINE
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        # Change the working directory for zipping as well
+        # We need to zip the content *from within* chapter-dashboard-api
+        run: zip -r ../release.zip ./*
+        working-directory: chapter-dashboard-api # <--- ADDED THIS LINE, adjusted zip path
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: release.zip
+          path: release.zip # This path is relative to the workflow's root, which is where the zip is created
 
   deploy:
     runs-on: ubuntu-latest
@@ -56,7 +60,7 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -71,4 +75,3 @@ jobs:
           app-name: 'chapters'
           slot-name: 'Production'
           package: .
-          
